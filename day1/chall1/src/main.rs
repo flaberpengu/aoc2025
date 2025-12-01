@@ -29,7 +29,8 @@ fn main() {
     println!("Password: {}", num_times_zero);
 }
 
-//Take in number of spaces to turn and a direction, return the updated position and the number of times it passed 0
+//Take in a direction to turn, the number of spaces to turn, and the position. 
+//Return the updated position and whether the new position is zero
 fn turn(direction: char, turn_amount: i32, mut pos: i32) -> (i32, u32){
     if direction == 'L'{
         pos -= turn_amount;
