@@ -45,5 +45,5 @@ fn main() {
             }
         }
     }
-    println!("Numer of accessible rolls: {}", valid_rolls);
+    println!("Number of accessible rolls: {}", valid_rolls);
 }

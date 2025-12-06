@@ -54,5 +54,5 @@ fn main() {
             grid[*roll_x][*roll_y] = 0;
         }
     }
-    println!("Numer of accessible rolls: {}", valid_rolls);
+    println!("Number of accessible rolls: {}", valid_rolls);
 }
