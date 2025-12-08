@@ -7,11 +7,7 @@ struct JunctionBox{
     x: i64,
     y: i64,
     z: i64,
-}
-
-#[derive(Debug)]
-struct Circuit{
-    ids: Vec<usize>,
+    circuit: Option::<usize>,
 }
 
 // ===================== HELPER FUNCTIONS =====================
@@ -51,6 +47,7 @@ fn main() {
                 x: coords[0].parse::<i64>().expect("Failed to parse x coord"),
                 y: coords[1].parse::<i64>().expect("Failed to parse y coord"),
                 z: coords[2].parse::<i64>().expect("Failed to parse z coord"),
+                circuit: None,
             });
         }
     }
@@ -69,48 +66,53 @@ fn main() {
     }
 
     //Create list of circuits after we have all connections we care about
-    let mut circuits: Vec<Circuit> = vec![];
+    let mut new_circuit_id: usize = 0;
     let mut pair_index: usize = 0;
     let mut pair: &(usize, usize, f64);
-    let mut pair_0_circuit: usize;
-    let mut pair_1_circuit: usize;
     let mut last_pair: (usize, usize) = (0, 0);
     let mut found_last: bool = false;
     while !found_last{
         pair = &shortest_pairs[pair_index];
-        pair_0_circuit = &circuits.len()+1;
-        pair_1_circuit = &circuits.len()+1;
-        let mut circuit_index: usize = 0;
-
-        //Find which circuits both elements of the pair are in
-        for circuit in &circuits{
-            if circuit.ids.contains(&pair.0){
-                pair_0_circuit = circuit_index;
-            }
-            if circuit.ids.contains(&pair.1){
-                pair_1_circuit = circuit_index;
-            }
-            circuit_index += 1;
-        }
 
         //Handle elements cases - new circuit if neither present, append other to circuit if one present, join circuits if required, leave if in same circuit
-        if pair_0_circuit >= circuits.len() && pair_1_circuit >= circuits.len(){
-            circuits.push(Circuit { ids: vec![pair.0, pair.1] });
+        if junction_boxes[pair.0].circuit.is_none() && junction_boxes[pair.1].circuit.is_none(){
+            junction_boxes[pair.0].circuit = Some(new_circuit_id);
+            junction_boxes[pair.1].circuit = Some(new_circuit_id);
+            new_circuit_id += 1;
         }
-        else if pair_0_circuit >= circuits.len(){
-            circuits[pair_1_circuit].ids.push(pair.0);
+        else if junction_boxes[pair.0].circuit.is_none(){
+            junction_boxes[pair.0].circuit = junction_boxes[pair.1].circuit;
         }
-        else if pair_1_circuit >= circuits.len(){
-            circuits[pair_0_circuit].ids.push(pair.1);
+        else if junction_boxes[pair.1].circuit.is_none(){
+            junction_boxes[pair.1].circuit = junction_boxes[pair.0].circuit;
         }
-        else if pair_0_circuit != pair_1_circuit{
-            let mut ids_to_move = circuits[pair_1_circuit].ids.clone();
-            circuits[pair_0_circuit].ids.append(&mut ids_to_move);
-            circuits.remove(pair_1_circuit);
+        else if junction_boxes[pair.0].circuit != junction_boxes[pair.1].circuit{
+            for i in 0..junction_boxes.len(){
+                if junction_boxes[i].circuit == junction_boxes[pair.1].circuit{
+                    junction_boxes[i].circuit = junction_boxes[pair.0].circuit;
+                }
+            }
         }
         
-        //If this circuit addition made all boxes connected in one circuit, we're done
-        if circuits.len() == 1 && circuits[0].ids.len() == junction_boxes.len() && last_pair == (0, 0){
+        //Check whether all boxes are in same circuit
+        let mut check_circuit: Option::<usize> = None;
+        let mut same: bool = true;
+        let mut jbox_index: usize = 0;
+        while same && jbox_index < junction_boxes.len(){
+            if junction_boxes[jbox_index].circuit.is_none(){
+                same = false;
+            }
+            else{
+                if check_circuit == None{
+                    check_circuit = junction_boxes[jbox_index].circuit;
+                }
+                else if junction_boxes[jbox_index].circuit != check_circuit{
+                    same = false;
+                }
+            }
+            jbox_index += 1;
+        }
+        if same{
             last_pair = (pair.0, pair.1);
             found_last = true;
         }
